@@ -48,7 +48,8 @@ public class Main {
             System.out.println("1. Ver libros disponibles");
             System.out.println("2. Apartar libro");
             System.out.println("3. Ver libros apartados");
-            System.out.println("4. Salir");
+            System.out.println("4. Devolver libro");
+            System.out.println("5. salir");
             System.out.print("Elija una opcion: ");
             String opcion = scanner.nextLine();
 
@@ -63,6 +64,9 @@ public class Main {
                     usuarioAutenticado.mostrarLibrosApartados();
                     break;
                 case "4":
+                    devolverLibro(usuarioAutenticado);
+                    break;
+                case "5":
                     continuar = false;
                     System.out.println("Hasta pronto!");
                     break;
@@ -75,13 +79,16 @@ public class Main {
     private static void mostrarLibros() {
         System.out.println("\n--- LIBROS DISPONIBLES ---");
         for (Libro libro : LibroDAO.obtenerLibros()) {
-            System.out.println("- " + libro);
+            if (libro.isDisponible()) {
+                System.out.println("- " + libro.getTitulo() + " (Autor: " + libro.getAutor() + ")");
+            }
         }
     }
 
+
     private static void apartarLibro(Usuario usuario) {
         LocalTime ahora = LocalTime.now();
-        LocalTime inicio = LocalTime.of(9, 30);
+        LocalTime inicio = LocalTime.of(8, 0);
         LocalTime fin = LocalTime.of(18, 0);
 
         System.out.println("Hora actual: " + ahora);
@@ -93,7 +100,7 @@ public class Main {
         if (!usuario.puedeApartarLibro()) {
             System.out.println("Ya has apartado 2 libros. No puedes apartar mas.");
             return;
-        }
+        }        
 
         mostrarLibros();
 
@@ -109,4 +116,29 @@ public class Main {
             System.out.println("Libro no encontrado o no disponible.");
         }
     }
+    
+    private static void devolverLibro(Usuario usuario) {
+    if (usuario.getLibrosApartados().isEmpty()) {
+        System.out.println("No tienes libros para devolver.");
+        return;
+    }
+
+    System.out.println("Libros que puedes devolver:");
+    usuario.mostrarLibrosApartados();
+
+    System.out.print("Ingresa el titulo del libro a devolver: ");
+    String titulo = scanner.nextLine();
+
+    boolean removido = usuario.devolverLibro(titulo);
+    if (removido) {
+        Libro libro = LibroDAO.buscarLibroPorTitulo(titulo);
+        if (libro != null) {
+            LibroDAO.actualizarDisponibilidad(libro.getId(), true);
+        }
+        System.out.println("Libro devuelto correctamente.");
+    } else {
+        System.out.println("No tienes un libro con ese titulo apartado.");
+    }
+}
+
 }
